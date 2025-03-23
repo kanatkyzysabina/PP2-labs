@@ -117,7 +117,7 @@ while running:
         prevY = currY
 
 
-    # mini squares of available colors to pick
+    # mini squares of available colors
     pygame.draw.rect(screen, colorBLACK, (20, 10, 20, 20))
     pygame.draw.rect(screen, colorRED, (50, 10, 20, 20))
     pygame.draw.rect(screen, colorBLUE, (80, 10, 20, 20))

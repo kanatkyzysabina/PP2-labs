@@ -40,11 +40,6 @@ eating_sound = pygame.mixer.Sound('eating.mp3')
 
 
 # CELL DRAWING
-def draw_grid():
-    for i in range(HEIGHT // CELL):
-        for j in range(WIDTH // CELL):
-            pygame.draw.rect(screen, GRAY, (i * CELL, j * CELL, CELL, CELL), 1)
-
 def draw_grid_chess():
     colors = [WHITE, GRAY]
 
@@ -158,9 +153,8 @@ while running:
                 snake.dy = -1
             
 
-    screen.fill(BLACK)
 
-    draw_grid()
+    draw_grid_chess()
 
     snake.move()
 
