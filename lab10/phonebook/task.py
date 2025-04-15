@@ -13,21 +13,13 @@ cursor = conn.cursor()
 # == creating tables == 
 
 cursor.execute('''
-    CREATE TABLE IF NOT EXISTS person (
-        id SERIAL PRIMARY KEY,
-        first_name VARCHAR(255),
-        last_name VARCHAR(255)
-    )
-''')
-
-cursor.execute('''
     CREATE TABLE IF NOT EXISTS phonebook (
-        id SERIAL PRIMARY KEY,
-        person_id INTEGER REFERENCES person(id),
-        phone_number VARCHAR(20)
+        id SERIAL,
+        first_name VARCHAR(255),
+        last_name VARCHAR(255),
+        phone_number VARCHAR(30)
     )
 ''')
-
 
 conn.commit()
 
@@ -41,9 +33,7 @@ def csv_reader(file):
             reader = csv.reader(f)
             for row in reader:
                 first, last, phone = row
-                cursor.execute("INSERT INTO person (first_name, last_name) VALUES (%s, %s) RETURNING id", (first, last))
-                person_id = cursor.fetchone()[0]
-                cursor.execute("INSERT INTO phonebook (person_id, phone_number) VALUES (%s, %s)", (person_id, phone))
+                cursor.execute("INSERT INTO phonebook (first_name, last_name, phone_number) VALUES (%s, %s, %s)", (first, last, phone))
             conn.commit()
         print("insertion through csv reader is DONE!")
     except (psycopg2.DatabaseError, Exception) as error:
@@ -57,11 +47,9 @@ def console_insertion():
     last = input("Surname: ")
     phone = input("Phone number: ")
     try:
-        cursor.execute("INSERT INTO person (first_name, last_name) VALUES (%s, %s) RETURNING ID", (first, last))
-        person_id = cursor.fetchone()[0]
-        cursor.execute("INSERT INTO phonebook (person_id, phone_number) VALUES (%s, %s)", (person_id, phone))
+        cursor.execute("INSERT INTO phonebook (first_name, last_name, phone_number) VALUES (%s, %s, %s)", (first, last, phone))
         conn.commit()
-        print("insertion through console is DONE!")
+        print("Insertion through console is DONE!")
     except (psycopg2.DatabaseError, Exception) as error:
         print(error)
 
@@ -69,21 +57,21 @@ def console_insertion():
 # == updatind data == 
 
 def update_data():
-    id = int(input("Id of a person you want to change: "))
+    person_id = int(input("Id of a person you want to change: "))
     print("Choose what to change: \n1 - Name \n2 - Phone Number")
     choice = int(input("Print your choice(1 or 2): "))
 
     if choice == 1:
         new_name = input("Print new name: ")
-        cursor.execute('''UPDATE person SET first_name = %s WHERE id = %s''', 
-                       (new_name, id))
+        cursor.execute('''UPDATE phonebook SET first_name = %s WHERE id = %s''', 
+                       (new_name, person_id))
         conn.commit()
         print("Data updated!")
     
     elif choice == 2:
         new_phone_num = input("Print new phone number: ")
-        cursor.execute('''UPDATE phonebook SET phone_number = %s WHERE person_id = %s''', 
-                       (new_phone_num, id))
+        cursor.execute('''UPDATE phonebook SET phone_number = %s WHERE id = %s''', 
+                       (new_phone_num, person_id))
         conn.commit()
         print("Data updated!")
     else:
@@ -100,17 +88,17 @@ def query_data():
     conn.autocommit = True
     choice = int(input("Print your choice(1-4): "))
     if choice == 1:
-        cursor.execute('''SELECT * FROM person ORDER BY first_name ASC; ''')
+        cursor.execute('''SELECT * FROM phonebook ORDER BY first_name ASC;''')
         filtered_data = cursor.fetchall()
         print("All data ordered by ASC first name: ")
         print(filtered_data)
     elif choice == 2:
-        cursor.execute('''SELECT * FROM person ORDER BY first_name DESC; ''')
+        cursor.execute('''SELECT * FROM phonebook ORDER BY first_name DESC; ''')
         filtered_data = cursor.fetchall()
         print("All data ordered by DESC first name: ")
         print(filtered_data)
     elif choice == 3:
-        cursor.execute("SELECT * FROM person WHERE first_name LIKE 'A%';")
+        cursor.execute("SELECT * FROM phonebook WHERE first_name LIKE 'A%';")
         filtered_data = cursor.fetchall()
         print("All data ordered by DESC first name: ")
         print(filtered_data)
@@ -124,29 +112,14 @@ def delete_data():
     choice = int(input("1 - By First Name \n2 - By Phone Number \nYour choice(1 or 2): " ))
     if choice == 1:
         name = input("Print first name you want to DELETE: ")
-        cursor.execute('''SELECT id FROM person WHERE first_name = %s''', (name,))
-        id_tuple = cursor.fetchone()
-        if id_tuple:
-            person_id = id_tuple[0]
-            cursor.execute('''DELETE FROM phonebook WHERE person_id = %s;''', (person_id, ))
-            cursor.execute('''DELETE FROM person WHERE id = %s;''', (person_id, ))
-            conn.commit()
-            print(f"Data with name {name} was deleted successfully!")
-        else:
-            print("No such person found")
-
+        cursor.execute('''DELETE FROM phonebook WHERE first_name = %s;''', (name, ))
+        conn.commit()
+        print(f"Data with name {name} was deleted successfully!")
     elif choice == 2:
-        number = input("Print Phone Number you want to DELETE: ")
-        cursor.execute('''SELECT person_id FROM phonebook WHERE phone_number = %s''', (number,))
-        id_tuple = cursor.fetchone()
-        if id_tuple:
-            person_id = id_tuple[0]
-            cursor.execute('''DELETE FROM person WHERE id = %s;''', (person_id, ))
-            cursor.execute('''DELETE FROM phonebook WHERE person_id = %s;''', (person_id, ))
-            conn.commit()
-            print(f"Data with phone number {number} was deleted successfully!")
-        else:
-            print("No such person found")
+        number = input("Print Phone Number you want to DELETE: ")    
+        cursor.execute('''DELETE FROM phonebook WHERE phone_number = %s;''', (number, ))
+        conn.commit()
+        print(f"Data with phone number {number} was deleted successfully!")
         
 # == choosing == 
 
